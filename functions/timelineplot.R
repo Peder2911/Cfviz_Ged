@@ -41,6 +41,5 @@ function(sum_w_missing){
      #scale_y_continuous(expand = c(0,0), limits = c(0,upperlim_1)) +
      do.call(labs,labargs)
 
-  saveRDS(gedtl,'tee.rds')
   gedtl
 }
