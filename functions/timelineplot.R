@@ -1,11 +1,12 @@
 
-function(sum_w_missing){
-
-   ged <- sum_w_missing
+function(ged,cfs,range = c(1989,2019)){
 
    # ================================
 
    datebreaks <- 'years'
+
+   range_start <- ymd(glue('{range[1]}-01-01'))
+   range_end <- ymd(glue('{range[2]}-12-31'))
 
    # Plotting ==========================================
 
@@ -21,6 +22,10 @@ function(sum_w_missing){
 
    gedtl <- ggplot(ged, enviroment = .e)+
      geom_col(aes(x = date, y = cnt))+
+     geom_segment(data = cfs,aes(x = start, xend = start, y = 0, yend = upperlim_2))+
+     geom_point(data = cfs,aes(x = start, y = upperlim_2)) + 
+     geom_text(data = cfs,aes(x = start, y = upperlim_2, label = start), 
+               angle = -45, size = 3, hjust = 1.1, check_overlap = TRUE) +
      theme_classic()+
      theme(axis.line.y = element_blank(),
            axis.title.y = element_text(size = 10),
@@ -36,7 +41,7 @@ function(sum_w_missing){
            legend.margin = margin(t = 0.1,r = 0.1,b = 0.1,l = 0.1, unit = 'cm'),
            plot.margin = margin(t = 0.3,l = 0.1,r = 0.3,unit = 'cm')) + 
      scale_x_date(expand = c(0,0), date_breaks = datebreaks, 
-                  date_labels = '%m-%Y') +
+                  date_labels = '%m-%Y',limits = c(range_start,range_end)) +
      do.call(scale_y_continuous,scaleargs) +
      #scale_y_continuous(expand = c(0,0), limits = c(0,upperlim_1)) +
      do.call(labs,labargs)
