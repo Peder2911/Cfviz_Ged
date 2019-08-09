@@ -5,9 +5,11 @@
  */
 
 let enterpress = 1;
+let plotchangers = ['refresh','usenames'];
 
 $(document).on('shiny:inputchanged', function(event){
-   if(event.name == 'refresh'){
+   // If string in list...
+   if(plotchangers.indexOf(event.name) > -1){
       enterpress = enterpress + 1;
       Shiny.setInputValue("enterpress",enterpress);
    }
