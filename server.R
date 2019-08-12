@@ -6,6 +6,7 @@ shh(library(magrittr))
 shh(library(dplyr))
 shh(library(stringr))
 shh(library(lubridate))
+shh(library(yaml))
 
 options(warn = -1)
 
@@ -16,20 +17,31 @@ fixacd <- dget('functions/fixacd.R')
 timelineplot <- dget('functions/timelineplot.R')
 latestversion <- dget('functions/latestversion.R')
 
-server <- function(input, output, session){
-   # SQL setup ======================
-   dr <- dbDriver('PostgreSQL')
-   con <- dbConnect(dr, db = Sys.getenv('GED_DB'), 
-                    user = Sys.getenv('GED_USER'), 
-                    password = Sys.getenv('GED_PASS'),
-                    host = Sys.getenv('GED_HOST'), 
-                    port = Sys.getenv('GED_PORT'))
+# ================================
 
-   GEDTABLE <- Sys.getenv('GED_TABLE')
+env <- readRDS('env.rds')
+
+con_config <- list(host = env$GED_HOST,
+                   port = env$GED_PORT,
+                   user = env$GED_USER,
+                   password = env$GED_PASSWORD,
+                   db = env$GED_DB)
+
+server <- function(input, output, session){
+
+   # SQL setup ======================
+
+   dr <- dbDriver('PostgreSQL')
+   con_config$dr <- dr
+   print(con_config)
+
+   con <- do.call(dbConnect,con_config)
 
    alltables <- dbListTables(con)
    ACDTABLE <- latestversion(alltables,'acd')  
    CFTABLE <- latestversion(alltables,'cf') 
+
+   GEDTABLE <- env$GED_TABLE 
 
    # Choices setup ==================
    gedcountries <- dbGetQuery(con,glue('SELECT country FROM {GEDTABLE}')) %>%

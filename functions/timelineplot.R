@@ -19,10 +19,6 @@ function(ged,cfs,acd,usenames = TRUE,range = c(1989,2019)){
    scaleargs <- list(expand = c(0,0), limits = c(0,upperlim_1))
    labargs <- list(x = 'Month',
                    y = 'Deaths (monthly)')
-   saveRDS(ged,'ged.rds')
-   saveRDS(cfs,'cfs.rds')
-   saveRDS(acd,'acd.rds')
-
 
    gedAesArgs <- list(x = as.symbol('date'), 
                       y = as.symbol('cnt'))
