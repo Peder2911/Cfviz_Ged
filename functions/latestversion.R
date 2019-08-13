@@ -3,7 +3,7 @@ function(files,name){
    relevantfiles <- files[str_detect(files,name)] 
 
    if(length(relevantfiles) == 0){
-      stop(glue('No files matched {name} in {dir}'))
+      stop(glue('No files matched {name}'))
    }
 
    filenumbers <- relevantfiles %>%

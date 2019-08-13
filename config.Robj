@@ -1,0 +1,7 @@
+
+list(con = list(
+   host = 'database',
+   port = 5432,
+   user = 'shiny',
+   db = 'shiny'))
+

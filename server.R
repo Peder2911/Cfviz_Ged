@@ -19,29 +19,28 @@ latestversion <- dget('functions/latestversion.R')
 
 # ================================
 
-env <- readRDS('env.rds')
+if(Sys.getenv('GED_CONFIG') == ""){
+   fpath <- 'config.Robj'
+} else {
+   fpath <- Sys.getenv('GED_CONFIG')
+}
 
-con_config <- list(host = env$GED_HOST,
-                   port = env$GED_PORT,
-                   user = env$GED_USER,
-                   password = env$GED_PASSWORD,
-                   db = env$GED_DB)
+config <- dget(fpath)
+
+con_config <- config$con
+dr <- dbDriver('PostgreSQL')
+con_config$dr <- dr
 
 server <- function(input, output, session){
 
    # SQL setup ======================
-
-   dr <- dbDriver('PostgreSQL')
-   con_config$dr <- dr
-   print(con_config)
 
    con <- do.call(dbConnect,con_config)
 
    alltables <- dbListTables(con)
    ACDTABLE <- latestversion(alltables,'acd')  
    CFTABLE <- latestversion(alltables,'cf') 
-
-   GEDTABLE <- env$GED_TABLE 
+   GEDTABLE <- latestversion(alltables,'ged') 
 
    # Choices setup ==================
    gedcountries <- dbGetQuery(con,glue('SELECT country FROM {GEDTABLE}')) %>%
