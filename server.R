@@ -54,11 +54,13 @@ server <- function(input, output, session){
    acdquery <- glue('SELECT {glue_collapse(acdvars,sep = ",")} FROM {ACDTABLE}')
    acd <- dbGetQuery(con,acdquery)
    acd <- acd %>% fixacd()
+   dbDisconnect(con)
 
    updateSelectInput(session,'country',choices = allcountries)
 
    observeEvent({input$country},{
-      # Get all unique actors
+       con <- do.call(dbConnect,con_config)
+       # Get all unique actors
 
       actorquery <- 'SELECT {glue_collapse(actorvars,sep = \',\')} FROM {table} WHERE {locvar}=\'{input$country}\''
 
@@ -81,10 +83,12 @@ server <- function(input, output, session){
       updateCheckboxGroupInput(session,'actors',choices = actors, selected = FALSE)
 
       locvar <- 'location'
+      dbDisconnect(con)
       })
 
    # Do plot when cntry changes =====
    observeEvent({input$enterpress},{
+      con <- do.call(dbConnect,con_config)
       withProgress({
          cntry <- input$country 
          gedquery <- glue('SELECT * FROM {GEDTABLE} WHERE country=\'{cntry}\'')
@@ -132,5 +136,6 @@ server <- function(input, output, session){
          }
          incProgress(0.25)
       })
+   dbDisconnect(con)
    })
 }
