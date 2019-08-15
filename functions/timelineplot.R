@@ -52,10 +52,10 @@ function(ged,cfs,acd,usenames = TRUE,range = c(1989,2019)){
 
    if(nrow(cfs) > 0){
       ceasefire_aestetics <- list(
-        geom_point(data = cfs,do.call(aes, cfPointArgs)), 
-        geom_segment(data = cfs,do.call(aes, cfSegmentArgs)),
+        geom_point(data = cfs,do.call(aes, cfPointArgs), color = 'green'), 
+        geom_segment(data = cfs,do.call(aes, cfSegmentArgs), color = 'red'),
         geom_text(data = cfs,do.call(aes, cfTextArgs), 
-                  angle = -45, size = 3, hjust = 1.1, check_overlap = TRUE))
+                  angle = -45, size = 3, hjust = 1.1, check_overlap = TRUE), color = 'blue')
    } else {
       ceasefire_aestetics <- list()
    }
