@@ -16,6 +16,12 @@ fixcfs <- dget('functions/fixcfs.R')
 fixacd <- dget('functions/fixacd.R')
 timelineplot <- dget('functions/timelineplot.R')
 latestversion <- dget('functions/latestversion.R')
+getData <- dget('functions/getData.R')
+
+# ================================
+
+colors <- readRDS('data/colors.rds')
+cfcodebook <- dget('data/cfcodebook.R')
 
 # ================================
 
@@ -38,7 +44,6 @@ server <- function(input, output, session){
    con <- do.call(dbConnect,con_config)
 
    alltables <- dbListTables(con)
-   ACDTABLE <- latestversion(alltables,'acd')  
    CFTABLE <- latestversion(alltables,'cf') 
    GEDTABLE <- latestversion(alltables,'ged') 
 
@@ -50,14 +55,13 @@ server <- function(input, output, session){
    allcountries <- intersect(gedcountries$country,cfcountries$location) %>%
       sort()
 
-   acdvars <- c('conflict_id','side_a','side_b')
-   acdquery <- glue('SELECT {glue_collapse(acdvars,sep = ",")} FROM {ACDTABLE}')
-   acd <- dbGetQuery(con,acdquery)
-   acd <- acd %>% fixacd()
    dbDisconnect(con)
 
    updateSelectInput(session,'country',choices = allcountries)
 
+   # ================================================
+   # Update choices @ country change ================
+   # ================================================
    observeEvent({input$country},{
        con <- do.call(dbConnect,con_config)
        # Get all unique actors
@@ -74,7 +78,6 @@ server <- function(input, output, session){
       actorvars <- 'actor_name'
       ceasefireactors <- dbGetQuery(con,glue(actorquery))
 
-
       actors <- lapply(list(gedactors,ceasefireactors),function(data){
          do.call(c,data)
          }) 
@@ -86,56 +89,67 @@ server <- function(input, output, session){
       dbDisconnect(con)
       })
 
-   # Do plot when cntry changes =====
+   # ================================================
+   # Generate plot @ enterpress =====================
+   # ================================================
    observeEvent({input$enterpress},{
-      con <- do.call(dbConnect,con_config)
       withProgress({
+         con <- do.call(dbConnect,con_config)
+
          cntry <- input$country 
-         gedquery <- glue('SELECT * FROM {GEDTABLE} WHERE country=\'{cntry}\'')
-         cfquery <- glue('SELECT * FROM {CFTABLE} WHERE location=\'{cntry}\'')
 
-         if(input$startyear > 1989 | input$endyear < 2019){
-            yrtemplate <- 'AND ({yrvar} >= {input$startyear} AND {yrvar} <= {input$endyear})'
-            yrvar <- 'year'
-            gedcond <- glue(yrtemplate)
-            yrvar <- 'cf_dec_yr'
-            cfcond <- glue(yrtemplate)
+         ged <- getData(con, GEDTABLE, 'ged',cntry, input$startyear, input$endyear)
+         cfs <- getData(con, CFTABLE,'cfs',cntry, input$startyear, input$endyear)
 
-            gedquery <- glue('{gedquery} {gedcond}')
-            cfquery <- glue('{cfquery} {cfcond}')
-         }
-
-
-         ged <- dbGetQuery(con,gedquery)
-         cfs <- dbGetQuery(con,cfquery)
          incProgress(0.25)
 
          if(length(input$actors) > 0){
-            DIST <- 0.4
             ged <- ged %>% filter(side_a %in% input$actors|
                                   side_b %in% input$actors)
 
             cfs <- cfs %>% filter(actor_name %in% input$actors)
          }
-
          incProgress(0.25)
 
          if(nrow(ged) > 0 | nrow(cfs) > 0){
-            ged_tl <- gedtimeline(ged)
+
+            ged_tl <<- gedtimeline(ged)
             incProgress(0.125)
-            cfs_fixed <- fixcfs(cfs) #TODO add acd naming
+            cfs_fixed <<- fixcfs(cfs, cfcodebook)
             incProgress(0.125)
 
-            timeline <- timelineplot(ged_tl,cfs_fixed,acd,
-                                     usenames = FALSE,
-                                     range = c(input$startyear,input$endyear))
+            if(input$coloring == 'None' | is.null(input$coloring)){
+               coloring <- NULL
+            } else {
+               coloring <- tolower(input$coloring)
+            }
+
+            timeline <- timelineplot(ged_tl, cfs_fixed,
+                                     range = c(input$startyear,input$endyear),
+                                     colors = colors, coloring = coloring)
 
             output$graph <- renderPlot(timeline)
          } else {
-            output$graph <- renderPlot(ggplot(tibble()) + geom_text(aes(x = 1,y = 1, label = 'No data in date-range' ), size = 25) + theme_void())
+            # Placeholder 4 no data
+            output$graph <- renderPlot(ggplot(tibble()) + 
+               geom_text(aes(x = 1,y = 1, label = 'No data in date-range' ), size = 25) + 
+               theme_void())
          }
+
+         dbDisconnect(con)
          incProgress(0.25)
       })
-   dbDisconnect(con)
    })
+
+   output$download_data <- downloadHandler(filename = 'data.zip',
+      content = function(file){
+         dir <- tempdir()
+         paths <- list(cfs = glue('{dir}/ceasefires.csv'),
+                       ged = glue('{dir}/ged.csv'))
+         write.csv(ged_tl, paths$ged, row.names = FALSE)
+         write.csv(cfs_fixed, paths$cfs, row.names = FALSE)
+
+         zip(file, unlist(paths), flags = '-r9Xj')
+      }
+   )
 }

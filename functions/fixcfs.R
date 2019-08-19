@@ -1,7 +1,10 @@
 
-function(cfs){
+function(cfs, codebook){
+   lookup <- function(dictionary, type, value){
+      dictionary[[type]][[value]]
+   }
+   varstodates <- dget('functions/varsToDates.R')
    if(nrow(cfs) > 0){
-      varstodates <- dget('functions/varsToDates.R')
 
       cfs$start_date <- suppressWarnings(varstodates(list(year = cfs$cf_dec_yr,
                                          month = cfs$cf_dec_month,
@@ -15,6 +18,13 @@ function(cfs){
       cfs$actor_name <- str_replace_all(cfs$actor_name,'\\s',' ')
       cfs$actor_name <- str_replace_all(cfs$actor_name,' +',' ')
 
+      cfs$type <- sapply(as.character(cfs$ceasefire_type), function(t){
+         lookup(codebook,"type",t)
+         })
+      cfs$purpose <- sapply(as.character(cfs$purpose_1), function(p){
+         lookup(codebook,"purpose",p)
+         }) 
+
       cfs %>%
          select(
             location,
@@ -24,6 +34,8 @@ function(cfs){
             actor_name,
             ucdp_dyad,
             year,
+            type,
+            purpose,
             name = actor_name)
    } else {
       tibble(location = character(),
@@ -32,6 +44,8 @@ function(cfs){
              actor_name = character(),
              ucdp_dyad = character(),
              year = integer(),
+             type = character(),
+             purpose = character(),
              name = character())
 
    }

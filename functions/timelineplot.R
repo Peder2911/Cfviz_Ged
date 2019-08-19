@@ -1,93 +1,141 @@
 
-function(ged,cfs,acd,usenames = TRUE,range = c(1989,2019)){
+function(ged, cfs, range = c(1989,2019),
+         coloring = NULL, colors){
 
-   # ================================
+   supplement <- function(call,args){
+      # Basically c(call,args), but retaining the
+      # call nature of `call`
+      for(n in names(args)){
+         call[[n]] <- args[[n]]
+      }
+      call 
+   }
 
-   datebreaks <- 'years'
+   # ================================================
+   # Scales =========================================
+   # ================================================
+
+   # Y ==============================================
+
+   datesum <- ged %>% group_by(date) %>% summarize(totcnt = sum(cnt))
+   upperlim_1 <- max(datesum$totcnt,na.rm = T) * 1.5 
+   upperlim_2 <- upperlim_1 - (upperlim_1*0.15)
+
+   scale_args_y <- list(expand = c(0,0), limits = c(0,upperlim_1))
+
+   yscale <- call('scale_y_continuous',
+                  expand = c(0,0), limits = c(0, upperlim_1)) %>%
+      eval()
+
+   # X ==============================================
 
    range_start <- ymd(glue('{range[1]}-01-01'))
    range_end <- ymd(glue('{range[2]}-12-31'))
 
-   # Plotting ==========================================
+   xscale <- call('scale_x_date', date_breaks = 'years',
+                  date_labels = '%m-%Y', limits = c(range_start, range_end)) %>%
+      eval()
 
-   daysum <- ged %>% group_by(date) %>% summarize(totcnt = sum(cnt))
+   # ================================================
+   # GED aes ========================================
+   # ================================================
+   # Building the geoms by constructing `call`s =====
 
-   upperlim_1 <- max(daysum$totcnt,na.rm = T) * 1.5 
-   upperlim_2 <- upperlim_1 - (upperlim_1*0.15)
-   ylab <- 'Battle-related deaths'
+   ged_col_aes <- call('aes', x = quote(date), y = quote(cnt))
+   ged_col <- call('geom_col',
+                   mapping = eval(ged_col_aes))
 
-   scaleargs <- list(expand = c(0,0), limits = c(0,upperlim_1))
-   labargs <- list(x = 'Month',
-                   y = 'Deaths (monthly)')
-
-   gedAesArgs <- list(x = as.symbol('date'), 
-                      y = as.symbol('cnt'))
-   cfSegmentArgs <- list(x = as.symbol('start'),
-                         xend = as.symbol('start'),
-                         y = 0,
-                         yend = as.symbol('upperlim_2'))
-   cfPointArgs <- list(x = as.symbol('start'), y = as.symbol('upperlim_2'))
-   cfTextArgs <- cfPointArgs
-   cfTextArgs$label <- as.symbol('start')
-
-   if(usenames){
-      ged <- merge(ged,acd, by ='conflict_id')
-      gedAesArgs$fill <- as.symbol('conflict_name')
-
-      cfs <- merge(cfs,acd, by ='conflict_id')
-      cfPointArgs$color <- as.symbol('conflict_name')
-      cfSegmentArgs$color <- as.symbol('conflict_name')
-
-      pcolors <- dget('functions/priocolors.R') %>% unlist() %>% rep(10)
-
-      allCids <- union(cfs$conflict_name, ged$conflict_name) 
-
-      colorscale <- list(scale_discrete_manual(aesthetics = c('color','fill'), values = pcolors[1:length(allCids)]))
-      #colorscale <- lapply(list(scale_color_manual, scale_fill_manual),function(f){
-      #   f(values = unique(union(cfs$conflict_name, ged$conflict_name)))
-      #   }) 
-   } else {
-      colorscale <- list()
-   }
-
-   if(nrow(cfs) > 0){
-      ceasefire_aestetics <- list(
-        geom_point(data = cfs,do.call(aes, cfPointArgs), color = 'green'), 
-        geom_segment(data = cfs,do.call(aes, cfSegmentArgs), color = 'red'),
-        geom_text(data = cfs,do.call(aes, cfTextArgs), 
-                  angle = -45, size = 3, hjust = 1.1, check_overlap = TRUE), color = 'blue')
-   } else {
-      ceasefire_aestetics <- list()
-   }
+   ged_geoms <- list(ged_col)
    if(nrow(ged) > 0){
-      ged_aestetics <- list(geom_col(do.call(aes,gedAesArgs)))
+      ged_geoms <- lapply(ged_geoms, eval, envir = environment()) 
    } else {
-      ged_aestetics <- list()
+      ged_geoms <- list()
    }
+
+   # ================================================
+   # CF aes==========================================
+   # ================================================
+   # More involved than the GED geoms ===============
+
+   # First set up base ==============================
+   cf_base_aes <- call("aes", x = quote(start), y = quote(upperlim_2))
+   cf_base <- call(' ', data = quote(cfs))
+
+   if(is.null(coloring)){
+      cf_base$color <- sample(colors, size = 1) 
+   } else {
+      cf_base_aes$color <- as.symbol(coloring)
+      cf_base_aes$fill <- as.symbol(coloring)
+   }
+   cf_base$mapping <- eval(cf_base_aes)
+
+   # Points, simple =================================
+   cf_point <- cf_base
+   cf_point[[1]] <- geom_point
+   cf_point <- cf_point %>%
+      supplement(list(size = 3, shape = 18))
+ 
+   # Segments, a bit more involved ==================
+   cf_segment <- cf_base
+   cf_segment[[1]] <- geom_segment 
+   cf_segment$mapping <- cf_base_aes %>%
+      supplement(list(xend = quote(start), y = 0, yend = quote(upperlim_2))) %>%
+      eval()
+   cf_segment$size <- 1.2 
+
+   # Text, also some options ========================
+   cf_text <- cf_base
+   cf_text[[1]] <- geom_text 
+
+   cf_text <- cf_text %>%
+      supplement(list(angle = -45, hjust = 1.2, size = 3,
+                     check_overlap = TRUE))
+
+   cf_text$mapping <- cf_base_aes %>%
+      supplement(list(label = quote(start))) %>%
+      eval()
+
+   # Assembly =======================================
+   cf_geoms <- list(cf_point, cf_segment, cf_text)
+   if(nrow(cfs) > 0){
+      cf_geoms <- lapply(cf_geoms, eval, envir = environment())
+   } else {
+      cf_geoms <- list()
+   }
+
+   # ================================================
+   # Labels and theming =============================
+   # ================================================
+
+   plotlabels <- labs(x = 'Month', y = 'Casualties (monthly)')
+   plottheme <- theme_classic() %>%
+      supplement(list(
+         axis.line.y = element_blank(),
+         axis.title.y = element_text(size = 10, angle = 90),
+
+         axis.title.x = element_blank(),
+         axis.text.x = element_text(angle = 45,
+                                       hjust = 0.8),
+         panel.grid.major.x = element_line(color = 'gray'),
+
+         legend.position = 'bottom',
+         legend.title = element_blank(),
+         legend.key.size = unit(0.2,units = 'cm'),
+         legend.spacing.x = unit(0.1,units = 'cm'),
+         legend.margin = margin(t = 0.1,r = 0.1,b = 0.1,l = 0.1, unit = 'cm'),
+
+         plot.margin = margin(t = 0.3,l = 0.1,r = 0.3, b = 1,unit = 'cm')))
+
+   # ================================================
+   # ================================================
+   # ================================================
 
    .e <- environment()
-
-   gedtl <- ggplot(ged, enviroment = .e)+
-      ged_aestetics + 
-      ceasefire_aestetics + 
-      theme_classic()+
-      theme(axis.line.y = element_blank(),
-            axis.title.y = element_text(size = 10),
-            axis.title.x = element_blank(),
-            axis.text.x = element_text(angle = 45,
-                                       hjust = 1),
-            panel.grid.major.x = element_line(color = 'gray'),
-            #panel.grid.minor.x = element_line(color = 'light gray'),
-            legend.position = 'bottom',
-            legend.title = element_blank(),
-            legend.key.size = unit(0.2,units = 'cm'),
-            legend.spacing.x = unit(0.1,units = 'cm'),
-            legend.margin = margin(t = 0.1,r = 0.1,b = 0.1,l = 0.1, unit = 'cm'),
-            plot.margin = margin(t = 0.3,l = 0.1,r = 0.3,unit = 'cm')) + 
-      scale_x_date(expand = c(0,0), date_breaks = datebreaks, 
-                   date_labels = '%m-%Y',limits = c(range_start,range_end)) +
-      colorscale + 
-      do.call(scale_y_continuous,scaleargs) +
-      do.call(labs,labargs)
-   gedtl
+   ggplot(ged, enviroment = .e)+
+      ged_geoms + 
+      cf_geoms + 
+      xscale + 
+      yscale + 
+      plottheme + 
+      plotlabels 
 }
