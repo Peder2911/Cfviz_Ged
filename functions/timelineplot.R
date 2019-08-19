@@ -63,9 +63,14 @@ function(ged, cfs, range = c(1989,2019),
 
    if(is.null(coloring)){
       cf_base$color <- sample(colors, size = 1) 
+      colorscale <- list()
    } else {
       cf_base_aes$color <- as.symbol(coloring)
       cf_base_aes$fill <- as.symbol(coloring)
+      nncolors <- colors
+      names(nncolors) <- NULL
+      colorscale <- scale_discrete_manual(aesthetics = c('color','fill'),
+                                          values = rep(nncolors, 5))
    }
    cf_base$mapping <- eval(cf_base_aes)
 
@@ -136,6 +141,7 @@ function(ged, cfs, range = c(1989,2019),
       cf_geoms + 
       xscale + 
       yscale + 
+      colorscale +
       plottheme + 
       plotlabels 
 }
