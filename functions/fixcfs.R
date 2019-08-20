@@ -1,8 +1,9 @@
 
 function(cfs, codebook){
-   lookup <- function(dictionary, type, value){
-      dictionary[[type]][[value]]
+   lookup <- function(x,dict){
+      sapply(x, function(value) {dict[[value]]}, USE.NAMES = FALSE)
    }
+
    varstodates <- dget('functions/varsToDates.R')
    if(nrow(cfs) > 0){
 
@@ -18,12 +19,11 @@ function(cfs, codebook){
       cfs$actor_name <- str_replace_all(cfs$actor_name,'\\s',' ')
       cfs$actor_name <- str_replace_all(cfs$actor_name,' +',' ')
 
-      cfs$type <- sapply(as.character(cfs$ceasefire_type), function(t){
-         lookup(codebook,"type",t)
-         })
-      cfs$purpose <- sapply(as.character(cfs$purpose_1), function(p){
-         lookup(codebook,"purpose",p)
-         }) 
+      catvars <- c('ceasefire_type','purpose_1','ddr','nsa_frac','geography',
+                   'timing','mediator_nego','implement','enforcement')
+      for(v in catvars){
+         cfs[[v]] <- factor(lookup(as.character(cfs[[v]]), codebook[[v]]))
+      }
 
       cfs %>%
          select(
@@ -34,8 +34,15 @@ function(cfs, codebook){
             actor_name,
             ucdp_dyad,
             year,
-            type,
-            purpose,
+            type = ceasefire_type,
+            purpose = purpose_1,
+            ddr,
+            fractionalization = nsa_frac,
+            geography,
+            timing,
+            negotiated = mediator_nego,
+            mechanism = implement,
+            enforcement, 
             name = actor_name)
    } else {
       tibble(location = character(),

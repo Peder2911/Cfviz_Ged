@@ -11,7 +11,11 @@ fluidPage(
             numericInput('endyear','End year',value = 2019,min = 1989,max = 2019),
             #checkboxInput('usenames','Use names',FALSE),
             checkboxGroupInput('actors','Actors',NULL,FALSE),
-            selectInput('coloring','Coloring:', choices = c('None','Type','Purpose'))
+            selectInput('coloring','Coloring:', choices = c('None','Type','Purpose',
+                                                            'DDR','Fractionalization',
+                                                            'Geography','Timing',
+                                                            'Negotiated','Mechanism',
+                                                            'Enforcement'))
          )
       ),
       mainPanel(
