@@ -1,5 +1,5 @@
 
-function(ged, cfs, range = c(1989,2019),
+function(ged, cfs, gedtype, range = c(1989,2019),
          coloring = NULL, colors){
 
    supplement <- function(call,args){
@@ -42,10 +42,20 @@ function(ged, cfs, range = c(1989,2019),
    # Building the geoms by constructing `call`s =====
 
    ged_col_aes <- call('aes', x = quote(date), y = quote(cnt))
-   ged_col <- call('geom_col',
-                   mapping = eval(ged_col_aes))
+   
+   ged_geom <- local({
+      #TODO implement this
+      #if(TRUE){
+         #geomcall[[1]] <- 'geom_col'
+      #} else if(gedtype == 'line'){
+         #geomcall[[1]] <- 'geom_line'
+         #geomcall$position <- 'stack'
+      #}
+      geomcall <- call('geom_col', mapping = eval(ged_col_aes))
+   })
 
-   ged_geoms <- list(ged_col)
+   ged_geoms <- list(ged_geom)
+
    if(nrow(ged) > 0){
       ged_geoms <- lapply(ged_geoms, eval, envir = environment()) 
    } else {
@@ -137,8 +147,8 @@ function(ged, cfs, range = c(1989,2019),
 
    .e <- environment()
    ggplot(ged, enviroment = .e)+
-      ged_geoms + 
       cf_geoms + 
+      ged_geoms + 
       xscale + 
       yscale + 
       colorscale +

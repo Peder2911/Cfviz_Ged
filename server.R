@@ -7,16 +7,14 @@ shh(library(dplyr))
 shh(library(stringr))
 shh(library(lubridate))
 shh(library(yaml))
+shh(library(tools))
 
 options(warn = -1)
 
 # Local functions ================
-gedtimeline <- dget('functions/gedtimeline.R')
-fixcfs <- dget('functions/fixcfs.R')
-fixacd <- dget('functions/fixacd.R')
+
 timelineplot <- dget('functions/timelineplot.R')
 latestversion <- dget('functions/latestversion.R')
-getData <- dget('functions/getData.R')
 
 # ================================
 
@@ -32,7 +30,6 @@ if(Sys.getenv('GED_CONFIG') == ""){
 }
 
 config <- dget(fpath)
-
 con_config <- config$con
 dr <- dbDriver('PostgreSQL')
 con_config$dr <- dr
@@ -48,16 +45,28 @@ server <- function(input, output, session){
    GEDTABLE <- latestversion(alltables,'ged') 
 
    # Choices setup ==================
-   gedcountries <- dbGetQuery(con,glue('SELECT country FROM {GEDTABLE}')) %>%
-      unique()    
-   cfcountries <- dbGetQuery(con,glue('SELECT Location FROM {CFTABLE}')) %>%
-      unique()
-   allcountries <- intersect(gedcountries$country,cfcountries$location) %>%
-      sort()
+   allcountries <- lapply(list(GEDTABLE,CFTABLE), function(TABLE){
+      dbGetQuery(con, glue('SELECT location FROM {TABLE}')) %>%
+         unlist() %>%
+         unique()
+      }) %>%
+      do.call(intersect, .)
+
+   # Cat variables setup ============================
+   infoquery <- dbSendQuery(con,glue('SELECT * FROM {CFTABLE}'))
+   cfnames <- dbColumnInfo(infoquery)[['name']]
+   dbClearResult(infoquery)
+
+   catvars <- cfnames[str_detect(cfnames,'^cat_')]
+   catvars <- sapply(catvars, function(vname){
+      str_extract(vname, '(?<=cat_)[a-zA-Z]+') %>%
+         toTitleCase()
+   })
 
    dbDisconnect(con)
 
    updateSelectInput(session,'country',choices = allcountries)
+   updateSelectInput(session,'coloring',choices = catvars)
 
    # ================================================
    # Update choices @ country change ================
@@ -68,20 +77,19 @@ server <- function(input, output, session){
 
       actorquery <- 'SELECT {glue_collapse(actorvars,sep = \',\')} FROM {table} WHERE {locvar}=\'{input$country}\''
 
-      table <- GEDTABLE 
-      locvar <- 'country'
-      actorvars <- c('side_a','side_b')
-      gedactors <- dbGetQuery(con,glue(actorquery))
+      gedquery <- 'SELECT side_a,side_b FROM {GEDTABLE}' %>%
+         paste0(' WHERE location=\'{input$country}\'' )
+      gedactors <- unique(unlist(dbGetQuery(con,glue(gedquery))))
 
-      table <- CFTABLE 
-      locvar <- 'location'
-      actorvars <- 'actor_name'
-      ceasefireactors <- dbGetQuery(con,glue(actorquery))
+      cfquery <- 'SELECT name FROM {CFTABLE}' %>%
+         paste0(' WHERE location=\'{input$country}\'')
+      ceasefireactors <- unlist(dbGetQuery(con,glue(cfquery)))
+      ceasefireactors <- ceasefireactors %>%
+         str_split(' *- *') %>%
+         do.call(c, .) %>%
+         unique()
 
-      actors <- lapply(list(gedactors,ceasefireactors),function(data){
-         do.call(c,data)
-         }) 
-      actors <- intersect(actors[[1]],actors[[2]])
+      actors <- intersect(gedactors,ceasefireactors)
 
       updateCheckboxGroupInput(session,'actors',choices = actors, selected = FALSE)
 
@@ -98,8 +106,22 @@ server <- function(input, output, session){
 
          cntry <- input$country 
 
-         ged <- getData(con, GEDTABLE, 'ged',cntry, input$startyear, input$endyear)
-         cfs <- getData(con, CFTABLE,'cfs',cntry, input$startyear, input$endyear)
+         
+         gedquery <- "SELECT * FROM {GEDTABLE} WHERE location = '{cntry}'"
+         cfquery <- "SELECT * FROM {CFTABLE} WHERE location = '{cntry}'"
+
+         startyear <- input$startyear
+         endyear <- input$endyear
+
+         if(startyear > 1989 | endyear < 2019){
+            gedquery <- gedquery %>%
+               paste0(' AND (year >= {startyear} AND year <= {endyear})')
+            cfquery <- cfquery %>%
+               paste0(' AND (date_part(\'year\',start) >= {startyear}') %>%
+               paste0(' AND date_part(\'year\',start) <= {endyear})')
+         }
+         ged <<- dbGetQuery(con, glue(gedquery))
+         cfs <<- dbGetQuery(con, glue(cfquery))
 
          incProgress(0.25)
 
@@ -107,25 +129,20 @@ server <- function(input, output, session){
             ged <- ged %>% filter(side_a %in% input$actors|
                                   side_b %in% input$actors)
 
-            cfs <- cfs %>% filter(actor_name %in% input$actors)
+            cfs <- cfs %>% filter(any(str_detect(name,input$actors)))
          }
          incProgress(0.25)
 
          if(nrow(ged) > 0 | nrow(cfs) > 0){
-
-            ged_tl <<- gedtimeline(ged)
-            incProgress(0.125)
-            cfs_fixed <<- fixcfs(cfs, cfcodebook)
-            incProgress(0.125)
-
             if(input$coloring == 'None' | is.null(input$coloring)){
                coloring <- NULL
             } else {
-               coloring <- tolower(input$coloring)
+               coloring <- paste0('cat_',tolower(input$coloring))
             }
 
-            timeline <- timelineplot(ged_tl, cfs_fixed,
+            timeline <- timelineplot(ged, cfs,
                                      range = c(input$startyear,input$endyear),
+                                     gedtype = input$gedtype,
                                      colors = colors, coloring = coloring)
 
             output$graph <- renderPlot(timeline)
@@ -146,8 +163,8 @@ server <- function(input, output, session){
          dir <- tempdir()
          paths <- list(cfs = glue('{dir}/ceasefires.csv'),
                        ged = glue('{dir}/ged.csv'))
-         write.csv(ged_tl, paths$ged, row.names = FALSE)
-         write.csv(cfs_fixed, paths$cfs, row.names = FALSE)
+         write.csv(ged, paths$ged, row.names = FALSE)
+         write.csv(cfs, paths$cfs, row.names = FALSE)
 
          zip(file, unlist(paths), flags = '-r9Xj')
       }

@@ -5,10 +5,10 @@
 #'
 
 function(con, table, schema, country, startyear, endyear, variables = '*'){
-   schema_dictionary <- list('ged' = list(country = 'country',
+   schema_dictionary <- list('ged' = list(country = 'location',
                                           startyear = 'year'),
                              'cfs' = list(country = 'location',
-                                          startyear = 'cf_dec_yr'))
+                                          startyear = 'start'))
 
    query <- glue('SELECT {variables} FROM {table}')
 
@@ -16,7 +16,8 @@ function(con, table, schema, country, startyear, endyear, variables = '*'){
    query <- paste0(query,country_predicate)
 
    if(startyear > 1989 | endyear < 2019){
-      year_predicate <- ' AND ({yrvar} >= {startyear} AND {yrvar} <= {endyear})'
+      year_predicate <- ' AND (date_part(\'year\',{yrvar}) >= {startyear}' %>%
+         paste0('AND date_part(\'year\',{yrvar}) <= {endyear}))')
       query <- paste0(query,year_predicate)
    }
 

@@ -22,7 +22,7 @@ function(cfs, codebook){
       catvars <- c('ceasefire_type','purpose_1','ddr','nsa_frac','geography',
                    'timing','mediator_nego','implement','enforcement')
       for(v in catvars){
-         cfs[[v]] <- factor(lookup(as.character(cfs[[v]]), codebook[[v]]))
+         cfs[[v]] <- lookup(as.character(cfs[[v]]), codebook[[v]])
       }
 
       cfs %>%
@@ -34,15 +34,15 @@ function(cfs, codebook){
             actor_name,
             ucdp_dyad,
             year,
-            type = ceasefire_type,
-            purpose = purpose_1,
-            ddr,
-            fractionalization = nsa_frac,
-            geography,
-            timing,
-            negotiated = mediator_nego,
-            mechanism = implement,
-            enforcement, 
+            cat_type = ceasefire_type,
+            cat_purpose = purpose_1,
+            cat_ddr = ddr,
+            cat_fractionalization = nsa_frac,
+            cat_geography = geography,
+            cat_timing = timing,
+            cat_mediated = mediator_nego,
+            cat_mechanism = implement,
+            cat_enforcement = enforcement, 
             name = actor_name)
    } else {
       tibble(location = character(),
