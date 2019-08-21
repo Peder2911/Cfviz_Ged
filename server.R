@@ -129,7 +129,7 @@ server <- function(input, output, session){
             ged <- ged %>% filter(side_a %in% input$actors|
                                   side_b %in% input$actors)
 
-            cfs <- cfs %>% filter(any(str_detect(name,input$actors)))
+            cfs <- cfs %>% filter(str_detect(name,input$actors))
          }
          incProgress(0.25)
 
