@@ -85,11 +85,12 @@ server <- function(input, output, session){
          paste0(' WHERE location=\'{input$country}\'')
       ceasefireactors <- unlist(dbGetQuery(con,glue(cfquery)))
       ceasefireactors <- ceasefireactors %>%
-         str_split(' *- *') %>%
+         str_split(' +- +') %>%
          do.call(c, .) %>%
          unique()
 
-      actors <- intersect(gedactors,ceasefireactors)
+      actors <- intersect(gedactors,ceasefireactors) %>%
+         sort()
 
       updateCheckboxGroupInput(session,'actors',choices = actors, selected = FALSE)
 
