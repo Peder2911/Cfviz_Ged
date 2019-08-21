@@ -19,7 +19,7 @@ fluidPage(
          plotOutput('graph'),
          fluidRow(
             downloadButton('download_data','Download Data'),
-            downloadButton('download_plot','Download Plot'),
+            downloadButton('download_plot','Download Plot')
          )
       )
    )
