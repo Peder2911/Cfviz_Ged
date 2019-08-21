@@ -29,11 +29,11 @@ function(ged, cfs, gedtype, range = c(1989,2019),
 
    # X ==============================================
 
-   range_start <- ymd(glue('{range[1]}-01-01'))
-   range_end <- ymd(glue('{range[2]}-12-31'))
+   range_start <- as.Date(glue('{range[1]}-01-01'))
+   range_end <- as.Date(glue('{range[2]}-01-01'))
 
-   xscale <- call('scale_x_date', date_breaks = 'years',
-                  date_labels = '%m-%Y', limits = c(range_start, range_end)) %>%
+   xscale <- call('scale_x_date', date_breaks = 'years', expand = c(0,0),
+                  date_labels = '%m-%Y', limits = c(range_start,range_end)) %>%
       eval()
 
    # ================================================

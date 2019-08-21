@@ -118,7 +118,7 @@ server <- function(input, output, session){
                paste0(' AND (year >= {startyear} AND year <= {endyear})')
             cfquery <- cfquery %>%
                paste0(' AND (date_part(\'year\',start) >= {startyear}') %>%
-               paste0(' AND date_part(\'year\',start) <= {endyear})')
+               paste0(' AND date_part(\'year\',start) < {endyear})')
          }
          ged <<- dbGetQuery(con, glue(gedquery))
          cfs <<- dbGetQuery(con, glue(cfquery))
@@ -144,6 +144,7 @@ server <- function(input, output, session){
                                      range = c(input$startyear,input$endyear),
                                      gedtype = input$gedtype,
                                      colors = colors, coloring = coloring)
+            currentplot <<- timeline
 
             output$graph <- renderPlot(timeline)
          } else {
@@ -167,6 +168,11 @@ server <- function(input, output, session){
          write.csv(cfs, paths$cfs, row.names = FALSE)
 
          zip(file, unlist(paths), flags = '-r9Xj')
+      }
+   )
+   output$download_plot <- downloadHandler(filename = 'plot.rds',
+      content = function(file){
+         saveRDS(currentplot,version = 2,file)
       }
    )
 }
