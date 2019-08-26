@@ -48,9 +48,9 @@ server <- function(input, output, session){
    allcountries <- lapply(list(GEDTABLE,CFTABLE), function(TABLE){
       dbGetQuery(con, glue('SELECT location FROM {TABLE}')) %>%
          unlist() %>%
-         unique()
-      }) %>%
-      do.call(intersect, .)
+         unique()}) %>%
+      do.call(intersect, .) %>%
+      sort()
 
    # Cat variables setup ============================
    infoquery <- dbSendQuery(con,glue('SELECT * FROM {CFTABLE}'))
