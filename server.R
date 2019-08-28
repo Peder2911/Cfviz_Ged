@@ -59,7 +59,7 @@ server <- function(input, output, session){
          unlist() %>%
          unique()})          
 
-   countries <-  do.call(intersect, allcountries) %>%
+   countries <- do.call(intersect, allcountries) %>%
          sort()
 
    updateSelectInput(session,'country',choices = countries)
@@ -82,7 +82,7 @@ server <- function(input, output, session){
       gedactors <- dbGetQuery(con,glue("SELECT side_a,side_b FROM {GEDTABLE}
                                         WHERE location = '{input$country}'"))
 
-      actors <- sapply(list(cfactors,gedactors), unlist) %>%
+      actors <- lapply(list(cfactors,gedactors), unlist) %>%
         do.call(intersect, .)
       # REPLACES ^ =====================================
 
@@ -151,7 +151,7 @@ server <- function(input, output, session){
 
          # Collapse names
          cfs <- cfs %>% group_by_at(names(cfs)[names(cfs) != 'actor']) %>%
-            summarize(actor = glue_collapse(actor, sep = ' - ')) %>%
+            summarize(actor = glue_collapse(sort(unique(actor)), sep = ' - ')) %>%
             ungroup()
 
          timeline <- timelineplot(ged, cfs,
