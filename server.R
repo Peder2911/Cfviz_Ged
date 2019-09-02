@@ -182,9 +182,9 @@ server <- function(input, output, session){
          zip(file, unlist(paths), flags = '-r9Xj')
       }
    )
-   output$download_plot <- downloadHandler(filename = 'plot.rds',
+   output$download_plot <- downloadHandler(filename = 'ged_cfs.eps',
       content = function(file){
-         saveRDS(currentplot,version = 2,file)
+         ggsave(file,currentplot,device = 'eps',height = 6, width = 14)
       }
    )
 }
