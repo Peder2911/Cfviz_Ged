@@ -40,5 +40,10 @@ list(purpose_1 = c(
       "1" = "Written agreement",
       "2" = "Written agreement",
       "-1" = "Unclear"
+   ),
+      ceasefire_type = c(
+      "1" = "Definitive",
+      "2" = "Preliminary",
+      "-1" = "Unclear"
    )
 )

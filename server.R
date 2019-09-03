@@ -51,7 +51,7 @@ server <- function(input, output, session){
    # Currently placeholder to see variable names.
    CAT_VARIABLES <- c(Written='written',Purpose_1='purpose_1',Purpose_2='purpose_2',
                       Mediator_nego='mediator_nego', Implement='implement',
-                      Enforcement='enforcement')
+                      Enforcement='enforcement', Type = 'ceasefire_type')
 
    # Choices setup ==================
    allcountries <- lapply(list(GEDTABLE,LOCATIONSTABLE), function(TABLE){
