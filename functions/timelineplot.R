@@ -1,6 +1,6 @@
 
 function(ged, cfs, gedtype, range = c(1989,2019),
-         coloring = NULL, colors){
+         categoryName, colors){
 
    supplement <- function(call,args){
       # Basically c(call,args), but retaining the
@@ -71,12 +71,13 @@ function(ged, cfs, gedtype, range = c(1989,2019),
    cf_base_aes <- call("aes", x = quote(start), y = quote(upperlim_2))
    cf_base <- call(' ', data = quote(cfs))
 
-   if(is.null(coloring)){
+   if(all(is.na(cfs$category))){
       cf_base$color <- sample(colors, size = 1) 
       colorscale <- list()
    } else {
-      cf_base_aes$color <- as.symbol(coloring)
-      cf_base_aes$fill <- as.symbol(coloring)
+      cf_base_aes$color <- quote(category) 
+      cf_base_aes$fill <- quote(category)
+
       nncolors <- colors
       names(nncolors) <- NULL
       colorscale <- scale_discrete_manual(aesthetics = c('color','fill'),
@@ -112,17 +113,18 @@ function(ged, cfs, gedtype, range = c(1989,2019),
 
    # Assembly =======================================
    cf_geoms <- list(cf_point, cf_segment, cf_text)
-   if(nrow(cfs) > 0){
+   #if(nrow(cfs) > 0){
       cf_geoms <- lapply(cf_geoms, eval, envir = environment())
-   } else {
-      cf_geoms <- list()
-   }
+   #} else {
+   #   cf_geoms <- list()
+   #}
 
    # ================================================
    # Labels and theming =============================
    # ================================================
 
-   plotlabels <- labs(x = 'Month', y = 'Casualties (monthly)')
+   plotlabels <- labs(x = 'Month', y = 'Casualties (monthly)',
+                      color = categoryName, fill = categoryName)
    plottheme <- theme_classic() %>%
       supplement(list(
          axis.line.y = element_blank(),

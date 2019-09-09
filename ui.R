@@ -7,19 +7,24 @@ fluidPage(
             actionButton('refresh','Refresh',icon = icon('redo')) 
          ),
          fluidRow(
-            numericInput('startyear','Start year',value = 1989,min = 1989,max = 2019),
-            numericInput('endyear','End year',value = 2019,min = 1989,max = 2019),
-            #checkboxInput('usenames','Use names',FALSE),
-            checkboxGroupInput('actors','Actors',NULL,FALSE),
-            selectInput('coloring','Coloring:', choices = NULL)
-            #selectInput('gedtype','Ged Type:',choices = c('col','line'))
+            column(6,
+               numericInput('startyear','Start year',value = 1989,min = 1989,max = 2019)
+            ),
+            column(6,
+               numericInput('endyear','End year',value = 2019,min = 1989,max = 2019)
+            )
+         ),
+         fluidRow(
+            selectInput('coloring','Coloring:', choices = NULL),
+            checkboxGroupInput('actors','Actors',NULL,FALSE)
          )
+         
       ),
       mainPanel(
          plotOutput('graph'),
          fluidRow(
             downloadButton('download_data','Download Data'),
-            downloadButton('download_plot','Download Plot')
+            downloadButton('download_plot','Download EPS')
          )
       )
    )
