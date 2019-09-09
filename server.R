@@ -1,5 +1,6 @@
 shh <- suppressPackageStartupMessages
 shh(library(RPostgreSQL))
+shh(library(RSQLite))
 shh(library(glue))
 shh(library(ggplot2))
 shh(library(magrittr))
@@ -30,10 +31,20 @@ if(Sys.getenv('GED_CONFIG') == ""){
    fpath <- Sys.getenv('GED_CONFIG')
 }
 
-config <- dget(fpath)
-con_config <- config$con
-dr <- dbDriver('PostgreSQL')
-con_config$dr <- dr
+if(!interactive() & !getOption("shiny.testmode",FALSE)){
+   # Assume it's in a docker environment, and can reach a database
+   # @ database:5432
+   message("*** NORMAL MODE ***")
+   config <- dget(fpath)
+   con_config <- config$con
+   dr <- dbDriver('PostgreSQL')
+   con_config$dr <- dr
+} else {
+   # Assume its being tested, and can find data in an SQLite file 
+   # @ the CWD
+   message("*** TESTING MODE ***")
+   con_config <- list(SQLite(), dbname = "test.sqlite")
+}
 
 server <- function(input, output, session){
 

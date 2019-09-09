@@ -2,6 +2,11 @@
 function(ged, cfs, gedtype, range = c(1989,2019),
          categoryName, colors){
 
+   if(class(ged$date) == "numeric"){
+      class(ged$date) = "Date"
+   }
+
+
    supplement <- function(call,args){
       # Basically c(call,args), but retaining the
       # call nature of `call`
