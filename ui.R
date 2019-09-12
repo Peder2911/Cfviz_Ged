@@ -53,11 +53,6 @@ fluidPage(
            )
       ),
       mainPanel(id = "window", width = 9,
-         fluidRow(id = "headline",
-            tags$div(class = "container",
-               tags$h1("Ceasefires and casualites")
-            )
-         ),
          fluidRow(
             column(12,
                plotOutput('timeline')

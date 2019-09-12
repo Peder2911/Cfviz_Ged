@@ -168,6 +168,7 @@ server <- function(input, output, session){
          paste0(" AND NOT (side_a LIKE 'Government%' AND side_b LIKE 'Government%')")
 
       ged <- dbGetQuery(con, glue(gedquery))
+
       cfs <- dbGetQuery(con, glue(cfquery)) %>%
          mutate(start = ymd(glue('{year}-{month}-{day}')), 
                 category = factor(lookup(category,CODEBOOK[[coloring]])))
@@ -224,7 +225,7 @@ server <- function(input, output, session){
          output$description <- renderText(strrep(paste0(strrep("*",10),'\n'),10))
       } else {
          # Placeholder 4 no data
-         output$graph <- renderPlot(ggplot(tibble()) + 
+         output$timeline <- renderPlot(ggplot(tibble()) + 
             geom_text(aes(x = 1,y = 1, label = 'No data in date-range' ), size = 25) + 
             theme_void())
       }

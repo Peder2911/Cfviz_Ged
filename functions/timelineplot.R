@@ -149,7 +149,7 @@ function(ged, cfs, gedtype, range = c(1989,2019),
                       months = "Monthly",
                       weeks = "Weekly")
 
-   plotlabels <- labs(x = '', y = glue('({casLabel})'),
+   plotlabels <- labs(x = '', y = glue('Casualties ({casLabel})'),
                       color = categoryName, fill = categoryName)
    plottheme <- theme_classic() %>%
       supplement(list(
