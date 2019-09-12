@@ -1,0 +1,50 @@
+
+#controlpanel {
+   position: fixed;
+   height: 100%;
+   left: 0;
+   right: 80%;
+}
+
+#controlpanel hr {
+   border-color: darkgray;
+}
+
+#window .row {
+   margin-left: -20%; 
+}
+
+#window {
+   position: fixed;
+   top: 0%;
+   bottom: 85%;
+   left: 20%;
+   right: 0%;
+}
+
+#headline {
+   text-align: left;
+}
+
+#headline > .container {
+    margin: 0px;
+    padding-left: 0px;
+    padding-bottom: 10px
+}
+
+.page-footer {
+   position: fixed;
+   right: 0%;
+   left: 20%;
+   border: #E3E3E3;
+   border-top-style: solid;
+   border-width: thin;
+}
+
+
+.page-footer > .container {
+    margin-top: 15px;
+    position: inherit;
+}
+
+

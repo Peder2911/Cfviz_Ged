@@ -10,20 +10,23 @@ shh(library(lubridate))
 shh(library(yaml))
 shh(library(tools))
 
-options(warn = -1)
-
-# Local functions ================
+# ================================================
+# Local functions ================================
 
 timelineplot <- dget('functions/timelineplot.R')
-latestversion <- dget('functions/latestversion.R')
+cakeplot <- dget('functions/cake.R')
+
+zerodays <- dget('functions/zerodays.R')
 lookup <- dget('functions/lookup.R')
 
-# ================================
+# ================================================
 
 COLORS <- readRDS('data/colors.rds')
 CODEBOOK <- dget('data/cfcodebook.R')
 
-# ================================
+# ================================================
+# Config, check if testing =======================
+# ================================================
 
 if(Sys.getenv('GED_CONFIG') == ""){
    fpath <- 'config.Robj'
@@ -31,7 +34,17 @@ if(Sys.getenv('GED_CONFIG') == ""){
    fpath <- Sys.getenv('GED_CONFIG')
 }
 
-if(!interactive() & !getOption("shiny.testmode",FALSE)){
+testing <- interactive() | 
+   getOption("shiny.testmode",FALSE) |
+   !Sys.getenv("TESTING") == ''
+
+if(testing){
+   if(interactive()) writeLines("\x1b[33;33;33mInteractive\x1b[0m")
+   if(getOption("shiny.testmode",FALSE)) writeLines("\x1b[33;33;33mTesting mode\x1b[0m")
+   if(!Sys.getenv("TESTING") == '') writeLines("\x1b[33;33;33mENV variable\x1b[0m")
+}
+
+if(!testing){
    # Assume it's in a docker environment, and can reach a database
    # @ database:5432
    message("*** NORMAL MODE ***")
@@ -39,12 +52,19 @@ if(!interactive() & !getOption("shiny.testmode",FALSE)){
    con_config <- config$con
    dr <- dbDriver('PostgreSQL')
    con_config$dr <- dr
+   dburl <- glue("http://{con_config$host}:{con_config$port}")
+   e <- tryCatch(httr::GET(dburl), error = function(e) e)
+   if(any(class(e) == "error")) stop(glue("Could not reach database @ {dburl}!"))
 } else {
    # Assume its being tested, and can find data in an SQLite file 
    # @ the CWD
    message("*** TESTING MODE ***")
    con_config <- list(SQLite(), dbname = "test.sqlite")
 }
+
+# ================================================
+# Server function ================================
+# ================================================
 
 server <- function(input, output, session){
 
@@ -143,8 +163,12 @@ server <- function(input, output, session){
                      AND {CEASEFIRESTABLE}.cf_effect_yr <= {endyear})')
       }
 
-      ged <<- dbGetQuery(con, glue(gedquery))
-      cfs <<- dbGetQuery(con, glue(cfquery)) %>%
+      # no intergovernmental
+      gedquery  <- gedquery %>%
+         paste0(" AND NOT (side_a LIKE 'Government%' AND side_b LIKE 'Government%')")
+
+      ged <- dbGetQuery(con, glue(gedquery))
+      cfs <- dbGetQuery(con, glue(cfquery)) %>%
          mutate(start = ymd(glue('{year}-{month}-{day}')), 
                 category = factor(lookup(category,CODEBOOK[[coloring]])))
 
@@ -165,14 +189,39 @@ server <- function(input, output, session){
             summarize(actor = glue_collapse(sort(unique(actor)), sep = ' - ')) %>%
             ungroup()
 
+         # Bin GED dates
+         grouping <- local({
+            yrdiff <- input$endyear - input$startyear
+            if(yrdiff >= 25){
+               "3 months"
+            } else if(yrdiff > 6){
+               "months"
+            } else {
+               "weeks"
+            }
+         })
+
+         class(ged$date) <- "Date"
+         ged <- ged %>% 
+            group_by(date = floor_date(date,grouping)) %>%
+            summarize(cnt = sum(cnt))
+         ged <- zerodays(ged,date,cnt,grouping)
+
+         ged <<- ged
+         cfs <<- cfs
          timeline <- timelineplot(ged, cfs,
                                   range = c(input$startyear,input$endyear),
                                   gedtype = input$gedtype,
                                   categoryName = input$coloring,
-                                  colors = COLORS)
+                                  colors = COLORS,
+                                  dategrouping = grouping)
+         cake <- cakeplot(cfs, colors = COLORS)
 
          currentplot <<- timeline
-         output$graph <- renderPlot(timeline)
+
+         output$timeline <- renderPlot(timeline)
+         output$cake <- renderPlot(cake)
+         output$description <- renderText(strrep(paste0(strrep("*",10),'\n'),10))
       } else {
          # Placeholder 4 no data
          output$graph <- renderPlot(ggplot(tibble()) + 

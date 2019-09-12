@@ -1,6 +1,6 @@
 
 function(ged, cfs, gedtype, range = c(1989,2019),
-         categoryName, colors){
+         categoryName, colors, dategrouping){
 
    if(class(ged$date) == "numeric"){
       class(ged$date) = "Date"
@@ -37,8 +37,23 @@ function(ged, cfs, gedtype, range = c(1989,2019),
    range_start <- as.Date(glue('{range[1]}-01-01'))
    range_end <- as.Date(glue('{range[2]}-01-01'))
 
-   xscale <- call('scale_x_date', date_breaks = 'years', expand = c(0,0),
-                  date_labels = '%m-%Y', limits = c(range_start,range_end)) %>%
+   rangeSize <- range[2] - range[1]
+   dateBreaks <- local({
+      if(rangeSize > 9){
+         "years"
+      } else if(rangeSize > 2){
+         "6 months"
+      } else if(rangeSize > 1){
+         "3 months"
+      } else {
+         "months"
+      }
+   })
+   dateLabels <- ifelse(dateBreaks == "years",
+                        "%Y", "%m-%Y")
+
+   xscale <- call('scale_x_date', date_breaks = dateBreaks, expand = c(0,0),
+                  date_labels = dateLabels, limits = c(range_start,range_end)) %>%
       eval()
 
    # ================================================
@@ -56,7 +71,8 @@ function(ged, cfs, gedtype, range = c(1989,2019),
          #geomcall[[1]] <- 'geom_line'
          #geomcall$position <- 'stack'
       #}
-      geomcall <- call('geom_col', mapping = eval(ged_col_aes))
+      geomcall <- call('geom_path', mapping = eval(ged_col_aes),
+                       size = 1.5, color = "#333333")
    })
 
    ged_geoms <- list(ged_geom)
@@ -128,25 +144,31 @@ function(ged, cfs, gedtype, range = c(1989,2019),
    # Labels and theming =============================
    # ================================================
 
-   plotlabels <- labs(x = 'Month', y = 'Casualties (monthly)',
+   casLabel <- switch(dategrouping,
+                      `3 months`="Three months",
+                      months = "Monthly",
+                      weeks = "Weekly")
+
+   plotlabels <- labs(x = '', y = glue('({casLabel})'),
                       color = categoryName, fill = categoryName)
    plottheme <- theme_classic() %>%
       supplement(list(
          axis.line.y = element_blank(),
-         axis.title.y = element_text(size = 10, angle = 90),
+         axis.title.y = element_text(size = 15, angle = 90,
+                                     vjust = 1,
+                                     margin = margin(-5,0,5,0, unit = "mm")),
+         axis.text.y = element_text(size = 12,
+                                    hjust = 1,
+                                    margin = margin(-2,2,-2,0, unit = "mm")),
 
          axis.title.x = element_blank(),
          axis.text.x = element_text(angle = 45,
-                                       hjust = 0.8),
+                                    hjust = 0.8,
+                                    size = 15),
          panel.grid.major.x = element_line(color = 'gray'),
 
-         legend.position = 'bottom',
-         legend.title = element_blank(),
-         legend.key.size = unit(0.2,units = 'cm'),
-         legend.spacing.x = unit(0.1,units = 'cm'),
-         legend.margin = margin(t = 0.1,r = 0.1,b = 0.1,l = 0.1, unit = 'cm'),
-
-         plot.margin = margin(t = 0.3,l = 0.1,r = 0.3, b = 1,unit = 'cm')))
+         legend.position = 'none',
+         plot.margin = margin(t = 0,l = 0,r = 0.5, b = 1,unit = 'cm')))
 
    # ================================================
    # ================================================
