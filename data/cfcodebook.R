@@ -30,8 +30,8 @@ list(purpose_1 = c(
    ),
       enforcement = c(
       "0" = "No enforcement",
-      "1" = "External enforcement",
-      "2" = "Intl. organization enforcement",
+      "1" = "Ext. state enforcement",
+      "2" = "NGO enforcement",
       "3" = "Unclear",
       "-1" = "Unlcear"
    ),

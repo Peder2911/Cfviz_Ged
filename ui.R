@@ -1,9 +1,8 @@
 fluidPage(
    includeScript('script.js'),
-   includeCSS('customization.css'),
+   #includeCSS('customization.css'),
    sidebarLayout(
-      sidebarPanel(id = "controlpanel",
-         column(12,
+      sidebarPanel(id = "controlpanel", width = 3,
             fluidRow(
                tags$img(src = "priologo.png",
                         height = 100,
@@ -36,10 +35,24 @@ fluidPage(
             fluidRow(
                downloadButton('download_data','Download Data'),
                downloadButton('download_plot','Download EPS')
-            )
-         )
+            ),
+            tags$hr(),
+            fluidRow(
+               column(6, id = "sources",
+                  HTML("<p>Casualty data from the 
+                        <a href=\"https://ucdp.uu.se\">UCDP GED</a>
+                        dataset.</p>")
+               ),
+               column(6, id = "attrib",
+                  HTML("<p>Peder G. Landsverk 2019
+                        (<a href=\"http://github.com/peder2911/Cfviz_Ged\">
+                           source code
+                        </a>)</p>
+                        ")
+               )
+           )
       ),
-      mainPanel(id = "window",
+      mainPanel(id = "window", width = 9,
          fluidRow(id = "headline",
             tags$div(class = "container",
                tags$h1("Ceasefires and casualites")
@@ -60,22 +73,6 @@ fluidPage(
             ),
             column(6,
                plotOutput('cake')
-            )
-         ),
-         tags$footer(class = "page-footer",
-            tags$div(class="container",
-               column(6, id = "sources",
-                  HTML("<p>Casualty data from the 
-                        <a href=\"https://ucdp.uu.se\">UCDP GED</a>
-                        dataset.</p>")
-               ),
-               column(6, id = "attrib",
-                  HTML("<p>Peder G. Landsverk 2019
-                        (<a href=\"http://github.com/peder2911/Cfviz_Ged\">
-                           source code
-                        </a>)</p>
-                        ")
-               )
             )
          )
       )
