@@ -1,16 +1,20 @@
 fluidPage(
    includeScript('script.js'),
-   #includeCSS('customization.css'),
+   includeCSS('customization.css'),
    sidebarLayout(
       sidebarPanel(id = "controlpanel", width = 3,
             fluidRow(
-               tags$img(src = "priologo.png",
-                        height = 100,
-                        width = 225),
-               tags$img(src = "ethlogo.png",
-                        height = 100,
-                        width = 350)
+               tags$div(class = "gfg",
+                  tags$img(src = "priologo.png",
+                           height = "50%",
+                           width = "50%"),
+                  tags$br(),
+                  tags$img(src = "ethsmall.png",
+                           height = "50%",
+                           width = "50%")
+               )
             ),
+            tags$hr(),
             fluidRow(
                selectInput('country','Country:',choices = NULL)
             ),
