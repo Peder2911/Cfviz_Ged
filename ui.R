@@ -5,13 +5,13 @@ fluidPage(
       sidebarPanel(id = "controlpanel", width = 3,
             fluidRow(
                tags$div(class = "gfg",
-                  tags$img(src = "priologo.png",
-                           height = "50%",
-                           width = "50%"),
-                  tags$br(),
-                  tags$img(src = "ethsmall.png",
-                           height = "50%",
-                           width = "50%")
+                  column(6,
+                     tags$img(src = "priologo.png")
+                  ),
+                  column(6,
+                     tags$img(src = "ethsmall.png")
+                  ),
+                  tags$br()
                )
             ),
             tags$hr(),
@@ -48,11 +48,7 @@ fluidPage(
                         dataset.</p>")
                ),
                column(6, id = "attrib",
-                  HTML("<p>Peder G. Landsverk 2019
-                        (<a href=\"http://github.com/peder2911/Cfviz_Ged\">
-                           source code
-                        </a>)</p>
-                        ")
+                  HTML("<p>Peder G. Landsverk 2019 (<a href=\"http://github.com/peder2911/Cfviz_Ged\">source code</a>)</p>")
                )
            )
       ),
