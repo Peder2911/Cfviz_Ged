@@ -36,10 +36,6 @@ fluidPage(
                selectInput('coloring','Category variable:', choices = NULL),
                checkboxGroupInput('actors','Actors',NULL,FALSE)
             ),
-            fluidRow(
-               downloadButton('download_data','Download Data'),
-               downloadButton('download_plot','Download EPS')
-            ),
             tags$hr(),
             fluidRow(
                column(6, id = "sources",
