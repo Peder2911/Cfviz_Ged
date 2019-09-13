@@ -33,7 +33,7 @@ fluidPage(
             ),
             tags$hr(),
             fluidRow(
-               selectInput('coloring','Coloring:', choices = NULL),
+               selectInput('coloring','Category variable:', choices = NULL),
                checkboxGroupInput('actors','Actors',NULL,FALSE)
             ),
             fluidRow(
@@ -55,19 +55,22 @@ fluidPage(
       mainPanel(id = "window", width = 9,
          fluidRow(
             column(12,
-               plotOutput('timeline')
+               tags$div(class = "card",
+                  plotOutput('timeline')
+               )
             )
          ),
          fluidRow(id = "lower",
             column(6,
                tags$div(class="card",
-                  tags$div(class="container",
-                     textOutput("description")
-                  )
+                  tags$h3("Variable description:"),
+                  textOutput("description")
                )
             ),
             column(6,
-               plotOutput('cake')
+               tags$div(class = "card",
+                  plotOutput('cake')
+               )
             )
          )
       )
