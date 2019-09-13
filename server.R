@@ -155,7 +155,7 @@ server <- function(input, output, session){
       startyear <- input$startyear
       endyear <- input$endyear
 
-      if(startyear > 1989 | endyear < 2019){
+      if(startyear > 1989 | endyear < 2018){
          gedquery <- gedquery %>%
             paste0(' AND (year >= {startyear} AND year <= {endyear})')
          cfquery <- cfquery %>%
