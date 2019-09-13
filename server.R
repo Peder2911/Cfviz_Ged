@@ -53,9 +53,9 @@ if(!testing){
    con_config <- config$con
    dr <- dbDriver('PostgreSQL')
    con_config$dr <- dr
-   dburl <- glue("http://{con_config$host}:{con_config$port}")
-   e <- tryCatch(httr::GET(dburl), error = function(e) e)
-   if(any(class(e) == "error")) stop(glue("Could not reach database @ {dburl}!"))
+   #dburl <- glue("http://{con_config$host}:{con_config$port}")
+   #e <- tryCatch(httr::GET(dburl), error = function(e) e)
+   #if(any(class(e) == "error")) stop(glue("Could not reach database @ {dburl}!"))
 } else {
    # Assume its being tested, and can find data in an SQLite file 
    # @ the CWD
