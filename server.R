@@ -9,6 +9,7 @@ shh(library(stringr))
 shh(library(lubridate))
 shh(library(yaml))
 shh(library(tools))
+shh(library(jsonlite))
 
 # ================================================
 # Local functions ================================
@@ -78,11 +79,8 @@ server <- function(input, output, session){
    CEASEFIRESTABLE <<- 'ceasefires'
    ACTORSTABLE <<- 'actors'
 
-   #TODO Update the names of these for UI!
-   # Currently placeholder to see variable names.
-   CAT_VARIABLES <- c(Written='written',Purpose_1='purpose_1',Purpose_2='purpose_2',
-                      Mediator_nego='mediator_nego', Implement='implement',
-                      Enforcement='enforcement', Type = 'ceasefire_type')
+   CAT_VARIABLES <- read_json("data/variables.json") %>%
+      bind_rows()
 
    # Choices setup ==================
    allcountries <- lapply(list(GEDTABLE,LOCATIONSTABLE), function(TABLE){
@@ -95,7 +93,7 @@ server <- function(input, output, session){
 
    updateSelectInput(session,'country',choices = countries)
 
-   updateSelectInput(session,'coloring',choices = names(CAT_VARIABLES)) 
+   updateSelectInput(session,'coloring',choices = CAT_VARIABLES$alias) 
 
    dbDisconnect(con)
 
@@ -137,9 +135,11 @@ server <- function(input, output, session){
                      '{ACTORSTABLE}.actor_name actor') 
 
       if(!input$coloring == 'None' |! is.null(input$coloring)){
-         coloring <<- CAT_VARIABLES[input$coloring]
-         catvar <- '{CEASEFIRESTABLE}.{coloring} as category'
+
+         coloring_variable <<- CAT_VARIABLES[CAT_VARIABLES$alias == input$coloring,]
+         catvar <- '{CEASEFIRESTABLE}.{coloring_variable$name} as category'
       } else {
+         coloring_variable <<- NULL
          catvar <- 'null as category'
       }
 
@@ -171,7 +171,7 @@ server <- function(input, output, session){
 
       cfs <- dbGetQuery(con, glue(cfquery)) %>%
          mutate(start = ymd(glue('{year}-{month}-{day}')), 
-                category = factor(lookup(category,CODEBOOK[[coloring]])))
+                category = factor(lookup(category,CODEBOOK[[coloring_variable$name]])))
 
       # Might change this?
       # Perhaps move to query - stage for Ceasefire data...
@@ -222,7 +222,7 @@ server <- function(input, output, session){
 
          output$timeline <- renderPlot(timeline)
          output$cake <- renderPlot(cake)
-         output$description <- renderText(strrep(paste0(strrep("*",10),'\n'),10))
+         output$description <- renderText(coloring_variable$description)
       } else {
          # Placeholder 4 no data
          output$timeline <- renderPlot(ggplot(tibble()) + 
