@@ -10,6 +10,7 @@ shh(library(lubridate))
 shh(library(yaml))
 shh(library(tools))
 shh(library(jsonlite))
+shh(library(forcats))
 
 # ================================================
 # Local functions ================================
@@ -154,7 +155,7 @@ server <- function(input, output, session){
                   WHERE {LOCATIONSTABLE}.location='{input$country}'"
 
       startyear <- input$startyear
-      endyear <- input$endyear
+      endyear <- input$endyear + 1
 
       if(startyear > 1989 | endyear < 2018){
          gedquery <- gedquery %>%
@@ -174,13 +175,16 @@ server <- function(input, output, session){
          mutate(start = ymd(glue('{year}-{month}-{day}')), 
                 category = factor(lookup(category,CODEBOOK[[coloring_variable$name]])))
 
+      names(COLORS) <- CODEBOOK[[coloring_variable$name]]
+      cfs$category <- fct_infreq(cfs$category)
+
       # Might change this?
       # Perhaps move to query - stage for Ceasefire data...
       if(length(input$actors) > 0){
          ged <- ged %>% filter(side_a %in% input$actors|
                                side_b %in% input$actors)
 
-         cfs <- cfs %>% filter(str_detect(actor,input$actors))
+         cfs <- cfs %>% filter(actor %in% input$actors)
       }
 
       # Plot or no plot
@@ -210,12 +214,23 @@ server <- function(input, output, session){
          startdate <- ymd(glue("{startyear}-01-01"))
          enddate <- ymd(glue("{endyear}-01-01"))
          ged <- zerodays(ged,date,cnt,grouping)
-                         
+
+         paddingdays <- switch(grouping,
+            `3 months` = 90,
+            `months` = 30,
+            `weeks` = 7)
+
+         padding <- rbind(ged[1,],ged[1,])
+         padding$date <- c(min(ged$date) - paddingdays,
+                           max(ged$date) + paddingdays)
+         padding$cnt <- 0
+         ged <- rbind(ged,padding) %>%
+            arrange(date)
 
          ged <<- ged
          cfs <<- cfs
          timeline <- timelineplot(ged, cfs,
-                                  range = c(input$startyear,input$endyear),
+                                  range = c(input$startyear,input$endyear + 1),
                                   gedtype = input$gedtype,
                                   categoryName = input$coloring,
                                   colors = COLORS,

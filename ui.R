@@ -18,7 +18,7 @@ fluidPage(
    tags$div(id = "ui", 
       sidebarLayout(
          sidebarPanel(id = "controlpanel", width = 3,
-               tags$h1(id= "datatitle","ETH-PRIO Ceasefires Dataset"),
+               tags$h1(id= "datatitle","ETH-PRIO Civil-war Ceasefires Dataset"),
                fluidRow(
                   tags$div(class = "gfg",
                      column(6,
@@ -40,10 +40,10 @@ fluidPage(
                fluidRow(
                   column(6,
                      numericInput('startyear','Start year',
-                                   value = 1989,min = 1989,max = 2019)
+                                   value = 1989,min = 1989,max = 2018)
                   ),
                   column(6,
-                     numericInput('endyear','End year',value = 2019,min = 1989,max = 2019)
+                     numericInput('endyear','End year',value = 2018,min = 1989,max = 2018)
                   )
                ),
                tags$hr(),

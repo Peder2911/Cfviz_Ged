@@ -23,7 +23,7 @@ function(ged, cfs, gedtype, range = c(1989,2019),
    # Y ==============================================
 
    datesum <- ged %>% group_by(date) %>% summarize(totcnt = sum(cnt))
-   upperlim_1 <- max(datesum$totcnt,na.rm = T) * 1.5 
+   upperlim_1 <- max(max(datesum$totcnt,na.rm = T) * 1.5, 1)
    upperlim_2 <- upperlim_1 - (upperlim_1*0.15)
 
    scale_args_y <- list(expand = c(0,0), limits = c(0,upperlim_1))
@@ -100,7 +100,7 @@ function(ged, cfs, gedtype, range = c(1989,2019),
       cf_base_aes$fill <- quote(category)
 
       nncolors <- colors
-      names(nncolors) <- NULL
+      #names(nncolors) <- NULL
       colorscale <- scale_discrete_manual(aesthetics = c('color','fill'),
                                           values = rep(nncolors, 5))
    }

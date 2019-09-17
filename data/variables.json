@@ -1,6 +1,6 @@
 [{"name": "purpose_1", 
    "alias": "Ceasefire Purpose", 
-   "description": "This variable indicates the primary motivation underlying the adoption of a ceasefire.  We distinguish between ceasefires that relate to elections, religious holidays, humanitarian efforts and peace processes."},
+   "description": "This variable shows the primary motivation behind each ceasefire.  We distinguish between ceasefires that relate to elections, religious holidays, humanitarian efforts and peace processes."},
 {"name": "mediator_nego",
    "alias": "Mediation",
    "description": "This variable shows whether or not we find evidence of that a ceasefire was developed with the assistance of a third-party mediator. Mediating parties can include individuals, states and NGOs." },
