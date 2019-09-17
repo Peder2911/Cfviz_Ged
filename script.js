@@ -4,20 +4,13 @@
  * and hitting the "refresh" button.
  */
 
-let enterpress = 1;
-let plotchangers = ['refresh','usenames'];
-
-$(document).on('shiny:inputchanged', function(event){
-   // If string in list...
-   if(plotchangers.indexOf(event.name) > -1){
+$(document).ready(function(){
+   let enterpress = 1;
+   $("#controlpanel").on('change',$.debounce(250,function(e){
       enterpress = enterpress + 1;
       Shiny.setInputValue("enterpress",enterpress);
-   }
-});
-
-$(document).on("keypress", function(e){
-   if(e.keyCode == 13){
-      enterpress = enterpress + 1;
-      Shiny.setInputValue("enterpress",enterpress);
-   }
+   }))
+   $(function () {
+        $('[data-toggle="popover"]').popover()
+   })
 });

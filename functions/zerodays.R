@@ -1,10 +1,18 @@
 
-function(data,datecolumn,ncolumn,dateres = "days"){
+function(data,datecolumn,ncolumn,dateres = "days",range = NULL){
    datecol <- as.character(substitute(datecolumn))
    ncol <- as.character(substitute(ncolumn))
 
    dates <- data[[datecol]]
-   range <- seq(min(dates),max(dates),by=dateres)
+
+
+
+   if(is.null(range)){
+      range <- seq(min(dates),max(dates),by=dateres)
+      range <- c(ceiling_date(range[1]-(range[2]-range[1]),'years'), range)
+   } else {
+   }
+   message(glue("Going from {range[1]} to {range[length(range)]}"))
 
    zerodates <- range[!range %in% dates]
    useSchema <- any(!names(data) %in% c(datecol,ncol))

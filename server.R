@@ -132,6 +132,7 @@ server <- function(input, output, session){
       variables <- c('{CEASEFIRESTABLE}.cf_effect_yr as year',
                      '{CEASEFIRESTABLE}.cf_effect_month as month',
                      '{CEASEFIRESTABLE}.cf_effect_day as day',
+                     '{CEASEFIRESTABLE}.locid as id',
                      '{ACTORSTABLE}.actor_name actor') 
 
       if(!input$coloring == 'None' |! is.null(input$coloring)){
@@ -206,7 +207,10 @@ server <- function(input, output, session){
          ged <- ged %>% 
             group_by(date = floor_date(date,grouping)) %>%
             summarize(cnt = sum(cnt))
+         startdate <- ymd(glue("{startyear}-01-01"))
+         enddate <- ymd(glue("{endyear}-01-01"))
          ged <- zerodays(ged,date,cnt,grouping)
+                         
 
          ged <<- ged
          cfs <<- cfs

@@ -1,71 +1,92 @@
+
+popover <- function(content){
+   tags$span(class = "glyphicon glyphicon-question-sign infofloat",
+      `data-toggle`="popover",
+      `data-trigger`="hover",
+      `data-content`= content,
+      style = "position:element(#attrib);")
+}
+
 fluidPage(
    includeScript('script.js'),
+   includeScript("js/debounce.js"),
+   includeScript("js/popper.min.js"),
    includeCSS('customization.css'),
-   sidebarLayout(
-      sidebarPanel(id = "controlpanel", width = 3,
-            fluidRow(
-               tags$div(class = "gfg",
+   #tags$div(id= "spinner", class = "spinner-border text-primary loader", role = "status",
+   #   tags$span(class = "sr-only", "Loading...")),
+   tags$img(id = "ready", src = "sunglasses.jpg", class = "loader", style = "display:none"),
+   tags$div(id = "ui", 
+      sidebarLayout(
+         sidebarPanel(id = "controlpanel", width = 3,
+               tags$h1(id= "datatitle","ETH-PRIO Ceasefires Dataset"),
+               fluidRow(
+                  tags$div(class = "gfg",
+                     column(6,
+                        tags$img(src = "priologo.png")
+                     ),
+                     column(6,
+                        tags$img(src = "ethsmall.png")
+                     ),
+                     tags$br()
+                  )
+               ),
+               tags$hr(),
+               fluidRow(
+                  column(12,
+                     popover("Only Countries included in both GED and the PRIO / ETH Ceasefire Dataset are included"),
+                     selectInput('country','Country:',choices = NULL)
+                  )
+               ),
+               fluidRow(
                   column(6,
-                     tags$img(src = "priologo.png")
+                     numericInput('startyear','Start year',
+                                   value = 1989,min = 1989,max = 2019)
                   ),
                   column(6,
-                     tags$img(src = "ethsmall.png")
+                     numericInput('endyear','End year',value = 2019,min = 1989,max = 2019)
+                  )
+               ),
+               tags$hr(),
+               column(12,
+                  fluidRow(
+                     selectInput('coloring','Category variable:', choices = NULL)
                   ),
-                  tags$br()
-               )
-            ),
-            tags$hr(),
-            fluidRow(
-               selectInput('country','Country:',choices = NULL)
-            ),
-            fluidRow(
-               actionButton('refresh','Refresh',icon = icon('redo')) 
-            ),
-            tags$hr(),
-            fluidRow(
-               column(6,
-                  numericInput('startyear','Start year',
-                                value = 1989,min = 1989,max = 2019)
+                  fluidRow(
+                     popover("If one or more actors is selected, the plots only show the ceasefires / combat deaths related to the selected parties. Only actors present in both the GED and PRIO/ETH Ceasefires Dataset are shown."),
+                     checkboxGroupInput('actors','Actors',NULL,FALSE)
+                  ) 
                ),
-               column(6,
-                  numericInput('endyear','End year',value = 2019,min = 1989,max = 2019)
-               )
-            ),
-            tags$hr(),
-            fluidRow(
-               selectInput('coloring','Category variable:', choices = NULL),
-               checkboxGroupInput('actors','Actors',NULL,FALSE)
-            ),
-            tags$hr(),
-            fluidRow(
-               column(6, id = "sources",
-                  HTML("<p>Casualty data from the 
-                        <a href=\"https://ucdp.uu.se\">UCDP GED</a>
-                        dataset.</p>")
-               ),
-               column(6, id = "attrib",
-                  HTML("<p>Peder G. Landsverk 2019 (<a href=\"http://github.com/peder2911/Cfviz_Ged\">source code</a>)</p>")
-               )
-           )
-      ),
-      mainPanel(id = "window", width = 9,
-         fluidRow(
-            column(12,
-               tags$div(class = "card",
-                  plotOutput('timeline')
-               )
-            )
+               tags$hr(),
+               fluidRow(
+                  column(6, id = "sources",
+                     HTML("<p>Casualty data from the 
+                           <a href=\"https://ucdp.uu.se\">UCDP GED</a>
+                           dataset.</p>")
+                  ),
+                  column(6, id = "attrib",
+                     HTML("<p>Peder G. Landsverk 2019 (<a href=\"http://github.com/peder2911/Cfviz_Ged\">source code</a>)</p>")
+                  )
+              )
          ),
-         fluidRow(id = "lower",
-            column(6,
-               tags$div(class="card",
-                  tags$h3("Variable description:"),
-                  textOutput("description")
+         mainPanel(id = "window", width = 9,
+            fluidRow(
+               column(12,
+                  tags$div(class = "card",
+                     plotOutput('timeline')
+                  )
                )
             ),
-            column(6,
-               tags$div(class = "card",
-                  plotOutput('cake')
+            fluidRow(id = "lower",
+               column(6,
+                  tags$div(class="card",
+                     tags$h3("Variable description:"),
+                     textOutput("description")
+                  )
+               ),
+               column(6,
+                  tags$div(class = "card",
+                     plotOutput('cake')
+                  )
                )
             )
          )
