@@ -7,9 +7,18 @@ body {
     text-align:center; 
 } 
 
+.infofloat{
+   float: right;
+   color: darkgray;
+}
+
+.popover {
+   width: 120%;
+}
+
 .well{
    border-radius: 3px;
-   margin-top: 25px;
+   margin-top: 0px;
    border: none;
 }
 .well img {
@@ -32,6 +41,7 @@ body {
    padding: 15px;
    margin-top: 25px;
    transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+   margin: 0px;
 }
 
 .card .shiny-text-output {
@@ -39,15 +49,20 @@ body {
 }
 
 div[class^=col] {
-    padding-left: 6px;
-    padding-right: 12px;
+    padding-left: 0px;
+    padding-right: 6px;
 }
 
-.infofloat{
-   float: right;
-   color: darkgray;
+.row {
+   padding: 0px;
+   margin: 0px;
+   padding-top: 0px;
+   padding-bottom: 5px;
+   margin: 0px;
 }
 
-.popover {
-   width: 120%;
+.container-fluid {
+   margin: 15px;
+   margin-right: 0px;
+   padding: 0px;
 }

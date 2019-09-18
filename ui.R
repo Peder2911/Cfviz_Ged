@@ -18,7 +18,7 @@ fluidPage(
    tags$div(id = "ui", 
       sidebarLayout(
          sidebarPanel(id = "controlpanel", width = 3,
-               tags$h1(id= "datatitle","ETH-PRIO Civil-war Ceasefires Dataset"),
+               tags$h1(id= "datatitle","ETH-PRIO Civil war Ceasefires Dataset"),
                fluidRow(
                   tags$div(class = "gfg",
                      column(6,
