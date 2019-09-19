@@ -82,6 +82,9 @@ server <- function(input, output, session){
 
    CAT_VARIABLES <- read_json("data/variables.json") %>%
       bind_rows()
+   COUNTRYWARNINGS <- read_json("data/warnings.json")
+   message(COUNTRYWARNINGS)
+   message(names(COUNTRYWARNINGS))
 
    # Choices setup ==================
    allcountries <- lapply(list(GEDTABLE,LOCATIONSTABLE), function(TABLE){
@@ -103,8 +106,13 @@ server <- function(input, output, session){
    # Update choices @ country change ================
    # ================================================
    observeEvent({input$country},{
-       con <- do.call(dbConnect,con_config)
+      if(input$country %in% names(COUNTRYWARNINGS)){
+         showModal(modalDialog(title = "Warning",
+                            COUNTRYWARNINGS[input$country]))
+      }
 
+      con <- do.call(dbConnect,con_config)
+      
       cfactors <- dbGetQuery(con,glue("SELECT actor_name FROM {LOCATIONSTABLE} 
                                        JOIN head ON head.cc=locations.cc
                                        JOIN actors ON head.acid=actors.acid 
