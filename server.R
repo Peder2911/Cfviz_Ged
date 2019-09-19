@@ -159,7 +159,7 @@ server <- function(input, output, session){
 
       if(startyear > 1989 | endyear < 2018){
          gedquery <- gedquery %>%
-            paste0(' AND (year >= {startyear} AND year <= {endyear})')
+            paste0(' AND (year >= {startyear} AND year < {endyear})')
          cfquery <- cfquery %>%
             paste0(' AND ({CEASEFIRESTABLE}.cf_effect_yr >= {startyear}
                      AND {CEASEFIRESTABLE}.cf_effect_yr <= {endyear})')
