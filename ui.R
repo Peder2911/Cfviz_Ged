@@ -44,7 +44,9 @@ fluidPage(
                   ),
                   column(6,
                      numericInput('endyear','End year',value = 2018,min = 1989,max = 2018)
-                  )
+                  ),
+	          downloadButton("download_plot","Download eps"),
+		  popover("Download both plots in EPS format for publishing")
                ),
                tags$hr(),
                column(12,
@@ -64,7 +66,7 @@ fluidPage(
                            dataset.</p>")
                   ),
                   column(6, id = "attrib",
-                     HTML("<p>Peder G. Landsverk 2019 (<a href=\"http://github.com/peder2911/Cfviz_Ged\">source code</a>)</p>")
+                     HTML("<p>Peder Landsverk 2019 (<a href=\"http://github.com/peder2911/Cfviz_Ged\">source code</a>)</p>")
                   )
               )
          ),

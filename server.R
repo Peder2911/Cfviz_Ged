@@ -246,6 +246,7 @@ server <- function(input, output, session){
          cake <- cakeplot(cfs, colors = COLORS)
 
          currentplot <<- timeline
+	 currentcake <<- cake
 
          output$timeline <- renderPlot(timeline)
          output$cake <- renderPlot(cake)
@@ -270,9 +271,17 @@ server <- function(input, output, session){
          zip(file, unlist(paths), flags = '-r9Xj')
       }
    )
-   output$download_plot <- downloadHandler(filename = 'ged_cfs.eps',
+   output$download_plot <- downloadHandler(filename = 'plots.zip',
       content = function(file){
-         ggsave(file,currentplot,device = 'eps',height = 6, width = 14)
+	 dir <- tempdir()
+      	 paths <- list(
+	    timeline = glue('{dir}/timeline.eps'),
+	    cake = glue('{dir}/cake.eps'))
+	
+         ggsave(paths$timeline,currentplot,device = 'eps',height = 6, width = 14)
+         ggsave(paths$cake,currentcake,device = 'eps',height = 6, width = 8)
+
+	 zip(file, unlist(paths), flags = '-r9Xj')
       }
    )
 }
